@@ -17,7 +17,6 @@
     },
     "require": {
 	"ext-inotify": "*",
-	"corneltek/cliframework": "~2",
 	"fruit/pathkit": "~1"
     },
     "suggest": {
