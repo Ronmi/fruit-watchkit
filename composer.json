@@ -16,7 +16,7 @@
 	"sebastian/phpcpd": "*"
     },
     "require": {
-	"ext-inotify": "~0.1",
+	"ext-inotify": "*",
 	"corneltek/cliframework": "~2",
 	"fruit/pathkit": "~1"
     },
