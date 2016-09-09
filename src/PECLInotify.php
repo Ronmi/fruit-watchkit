@@ -45,9 +45,4 @@ class PECLInotify implements Inotify
     {
         return inotify_read($this->inotify);
     }
-
-    public function resource()
-    {
-        return $h;
-    }
 }
