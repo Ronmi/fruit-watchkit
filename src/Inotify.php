@@ -8,5 +8,4 @@ interface Inotify {
     function len();
     function read(); // this is non-blocking
     function wait(); // this is blocking read
-    function resource(); // return stream resource, so we can use stream_select
 }
