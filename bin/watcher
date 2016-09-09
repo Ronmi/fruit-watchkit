@@ -1,0 +1,20 @@
+#!/usr/bin/env php
+<?php
+
+require('vendor/autoload.php');
+
+use Fruit\WatchKit\Watcher;
+
+if (!file_exists('watcher.json')) {
+    die('cannot find watcher.json');
+}
+
+$data = json_decode(file_get_contents('watcher.json'), true);
+
+$w = new Watcher();
+
+foreach ($data as $pattern => $script) {
+    $w->add($pattern, $script);
+}
+
+$w->run();
