@@ -222,7 +222,6 @@ class Watcher
             // check against all patterns
             foreach ($this->patterns as $p) {
                 $regexp = $p['regexp'];
-                echo $path . ' => ' . $regexp . "\n";
                 if (preg_match($regexp, $path) === 1) {
                     $scripts[$p['script']] = true;
                 }

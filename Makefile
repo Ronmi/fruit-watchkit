@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 
 .PHONY: force-update clean prepare lint \
-	pdepend phpmd phpcs phpcpd docs
+	pdepend phpmd phpcs phpcpd docs test
 
 lint:
 	find src -name '*.php' -exec php -l {} \;
@@ -26,6 +26,9 @@ update: composer.phar
 force-update: composer.phar
 	./composer.phar selfupdate
 	./composer.phar update
+
+test: vendor/autoload.php
+	vendor/bin/phpunit -c phpunit.xml
 
 clean:
 	rm -fr build/coverage
