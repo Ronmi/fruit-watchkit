@@ -5,9 +5,14 @@ namespace Fruit\WatchKit;
 class PECLInotify implements Inotify
 {
     protected $inotify;
-    public function __contruct()
+    public function __construct()
     {
         $this->inotify = inotify_init();
+
+        if ($this->inotify == false) {
+            // fail fast
+            die('cannot initialize inotify');
+        }
         stream_set_blocking($this->inotify, true);
     }
 
