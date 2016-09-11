@@ -1,0 +1,18 @@
+sudo: false
+addons:
+  apt:
+    packages:
+      - libinotifytools0-dev
+language: php
+version:
+  - '5.5'
+  - '5.6'
+  - '7.0'
+
+before_script:
+  - pecl channel-update pecl.php.net
+  - echo "$TRAVIS_PHP_VERSION" | grep '^7' || pecl install inotify-0.1.6
+  - echo "$TRAVIS_PHP_VERSION" | grep '^7' && pecl install inotify-2.0.0 || true
+
+script:
+  - make test
