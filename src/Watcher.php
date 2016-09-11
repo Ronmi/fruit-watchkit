@@ -204,7 +204,11 @@ class Watcher
                     // so it should be safe to skip
                     continue;
                 }
-                $paths[$this->watched->getv($cur['wd'])] = true;
+                $path = $this->watched->getv($cur['wd']);
+                if (isset($cur['name']) && $cur['name'] != '') {
+                    $path .= DIRECTORY_SEPARATOR . $cur['name'];
+                }
+                $paths[$path] = true;
             } elseif (($m & \IN_IGNORED) !== 0) {
                 // watcher is removed, clear records
                 $this->watched->removev($cur['wd']);
