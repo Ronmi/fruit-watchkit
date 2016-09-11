@@ -184,6 +184,9 @@ class Watcher
             die('unknown delete event: ' . $this->dumpEvent($e));
         }
         $path = $this->watched->getv($e['wd']);
+        if (isset($e['name']) && $e['name'] != '') {
+            $path = (new Path($e['name'], $path . DIRECTORY_SEPARATOR))->expand();
+        }
         // try to remove watcher anyway
         @$this->inotify->del($e['wd']);
         $this->watched->removev($e['wd']);
