@@ -4,7 +4,7 @@ addons:
     packages:
       - libinotifytools0-dev
 language: php
-version:
+php:
   - '5.5'
   - '5.6'
   - '7.0'
