@@ -1,0 +1,4 @@
+{
+  "src": "make test",
+  "test": "make test"
+}
