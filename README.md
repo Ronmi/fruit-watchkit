@@ -1,28 +1,38 @@
 # WatchKit
 
+![I'm watching you](https://cdn.meme.am/instances/500x/24694170.jpg)
+
 This package is part of Fruit Framework.
 
 WatchKit is a tool helping you develope your web application with Fruit framework or any other which needs to generate php code dynamically.
 
 It is still under developement, anything could be changed later.
 
+[![Build Status](https://travis-ci.org/Ronmi/fruit-watchkit.svg?branch=master)](https://travis-ci.org/Ronmi/fruit-watchkit)
+
 ## Usage
 
-List the file and command, 1 file per line, use `|` to separate file from command, and save them into a file:
+Create a `watcher.json` in project directory.
 
-```
-my_route.php|make route
-../benchmarks/|cd ..;vendor/bin/bench run benchmarks > benchmark.log 2>&1
-/home/cooperator/src/some.php|cd /our/project/tools;php send_notify.php me@example.com
-```
-
-And pass it to command line tool `watcher`
-
-```sh
-watcher run -l my_watch_list_file
+```js
+{
+  // pattern => shell script
+  "src/**/*.php": "make test",
+  "test": "make test"
+}
 ```
 
-Never forget taking care of file path, never.
+and run `bin/watcher` (or `vendor/bin/watcher` when installed via composer).
+
+## More detail
+
+WatchKit parses your pattern, use inotify to watch the changes made to it, and execute shell script when changed.
+
+If the pattern resolves to some directory, WatchKit will also watch for child directories recursively. All changes does to decent files will trigger an execution. So newly created files are under monitoring.
+
+## Known bug
+
+When pattern resolves to files, newly created files will not be watched.
 
 ## License
 
