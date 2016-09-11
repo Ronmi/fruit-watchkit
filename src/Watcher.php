@@ -13,36 +13,36 @@ use Fruit\DSKit\Set;
  */
 class Watcher
 {
+    private static $msg = array(
+        \IN_ACCESS        => 'IN_ACCESS',
+        \IN_MODIFY        => 'IN_MODIFY',
+        \IN_ATTRIB        => 'IN_ATTRIB',
+        \IN_CLOSE_WRITE   => 'IN_CLOSE_WRITE',
+        \IN_CLOSE_NOWRITE => 'IN_CLOSE_NOWRITE',
+        \IN_OPEN          => 'IN_OPEN',
+        \IN_MOVED_TO      => 'IN_MOVED_TO',
+        \IN_MOVED_FROM    => 'IN_MOVED_FROM',
+        \IN_CREATE        => 'IN_CREATE',
+        \IN_DELETE        => 'IN_DELETE',
+        \IN_DELETE_SELF   => 'IN_DELETE_SELF',
+        \IN_MOVE_SELF     => 'IN_MOVE_SELF',
+        \IN_CLOSE         => 'IN_CLOSE',
+        \IN_MOVE          => 'IN_MOVE',
+        \IN_ALL_EVENTS    => 'IN_ALL_EVENTS',
+        \IN_UNMOUNT       => 'IN_UNMOUNT',
+        \IN_Q_OVERFLOW    => 'IN_Q_OVERFLOW',
+        \IN_IGNORED       => 'IN_IGNORED',
+        \IN_ISDIR         => 'IN_ISDIR',
+        \IN_ONLYDIR       => 'IN_ONLYDIR',
+        \IN_DONT_FOLLOW   => 'IN_DONT_FOLLOW',
+        \IN_MASK_ADD      => 'IN_MASK_ADD',
+        \IN_ONESHOT       => 'IN_ONESHOT',
+    );
+
     private function dumpEvent($e)
     {
-        static $msg = array(
-            \IN_ACCESS        => 'IN_ACCESS',
-            \IN_MODIFY        => 'IN_MODIFY',
-            \IN_ATTRIB        => 'IN_ATTRIB',
-            \IN_CLOSE_WRITE   => 'IN_CLOSE_WRITE',
-            \IN_CLOSE_NOWRITE => 'IN_CLOSE_NOWRITE',
-            \IN_OPEN          => 'IN_OPEN',
-            \IN_MOVED_TO      => 'IN_MOVED_TO',
-            \IN_MOVED_FROM    => 'IN_MOVED_FROM',
-            \IN_CREATE        => 'IN_CREATE',
-            \IN_DELETE        => 'IN_DELETE',
-            \IN_DELETE_SELF   => 'IN_DELETE_SELF',
-            \IN_MOVE_SELF     => 'IN_MOVE_SELF',
-            \IN_CLOSE         => 'IN_CLOSE',
-            \IN_MOVE          => 'IN_MOVE',
-            \IN_ALL_EVENTS    => 'IN_ALL_EVENTS',
-            \IN_UNMOUNT       => 'IN_UNMOUNT',
-            \IN_Q_OVERFLOW    => 'IN_Q_OVERFLOW',
-            \IN_IGNORED       => 'IN_IGNORED',
-            \IN_ISDIR         => 'IN_ISDIR',
-            \IN_ONLYDIR       => 'IN_ONLYDIR',
-            \IN_DONT_FOLLOW   => 'IN_DONT_FOLLOW',
-            \IN_MASK_ADD      => 'IN_MASK_ADD',
-            \IN_ONESHOT       => 'IN_ONESHOT',
-        );
-        var_dump($msg);
         $e['msg'] = array();
-        foreach ($msg as $k => $m) {
+        foreach (self::$msg as $k => $m) {
             if ($e['mask'] & $k !== 0) {
                 array_push($e['msg'], $m);
             }
@@ -168,7 +168,7 @@ class Watcher
             // we only listen to create event on directory, fail fast
             die('create event on file: ' . $this->dumpEvent($e));
         }
-        $created = (new Path($e['name'], $path))->expand();
+        $created = (new Path($e['name'], $path . DIRECTORY_SEPARATOR))->expand();
         if (!is_dir($created)) {
             // file, nothing to do
             return;
@@ -197,7 +197,7 @@ class Watcher
             if (($m & \IN_CREATE) !== 0) {
                 $this->handleCreation($cur);
             } elseif (($m & \IN_DELETE_SELF) !== 0 or ($m & \IN_MOVE_SELF) !== 0) {
-                $paths[$this->handleDelete($cur)] = true;
+                $paths[$this->handleDelete($cur)] = 'DELETED';
             } elseif (($m & \IN_CLOSE_WRITE) !== 0) {
                 if (!$this->watched->hasv($cur['wd'])) {
                     // record not found, this might because record has been removed above
@@ -206,9 +206,9 @@ class Watcher
                 }
                 $path = $this->watched->getv($cur['wd']);
                 if (isset($cur['name']) && $cur['name'] != '') {
-                    $path .= DIRECTORY_SEPARATOR . $cur['name'];
+                    $path = (new Path($cur['name'], $path . DIRECTORY_SEPARATOR))->expand();
                 }
-                $paths[$path] = true;
+                $paths[$path] = 'CHANGED';
             } elseif (($m & \IN_IGNORED) !== 0) {
                 // watcher is removed, clear records
                 $this->watched->removev($cur['wd']);
@@ -222,12 +222,12 @@ class Watcher
 
     private function parsePaths($paths, $scripts)
     {
-        foreach ($paths as $path => $nouse) {
+        foreach ($paths as $path => $cause) {
             // check against all patterns
             foreach ($this->patterns as $p) {
                 $regexp = $p['regexp'];
                 if (preg_match($regexp, $path) === 1) {
-                    $scripts[$p['script']] = true;
+                    $scripts[$p['script']] = array($path, $cause);
                 }
             }
         }
@@ -249,9 +249,12 @@ class Watcher
             $scripts = $this->parsePaths($paths, array());
             while (count($scripts) > 0) {
                 $s = array_keys($scripts)[0];
+                list($path, $cause) = $scripts[$s];
                 unset($scripts[$s]);
 
-                echo shell_exec($s) . "\n";
+                echo sprintf("\n[%s] %s has %s, running [%s]\n", $cause, $path, $cause, $s);
+                $res = explode("\n", shell_exec($s));
+                echo '> ' . implode("\n> ", $res) . "\n";
 
                 // update event queue, merge into pending lists,
                 // so we might not need to execute too many times
